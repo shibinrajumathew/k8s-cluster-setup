@@ -1,0 +1,63 @@
+---
+- name: Setup Docker and install Jenkins
+  hosts: servers
+  become: yes
+
+  tasks:
+    - name: Update apt and install dependencies
+      apt:
+        update_cache: yes
+        name: 
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+
+    - name: Install Docker Python module
+      pip:
+        name: docker
+
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Pull Jenkins Docker image
+      docker_image:
+        name: jenkins/jenkins
+        source: pull
+
+    - name: Create Jenkins container
+      docker_container:
+        name: jenkins
+        image: jenkins/jenkins
+        state: started
+        ports:
+          - "8080:8080"
+          - "50000:50000"
+        volumes:
+          - /var/jenkins_home:/var/jenkins_home
