@@ -30,10 +30,6 @@
         state: present
         update_cache: yes
 
-    - name: Install Docker Python module
-      pip:
-        name: docker
-
     - name: Start and enable Docker service
       systemd:
         name: docker
