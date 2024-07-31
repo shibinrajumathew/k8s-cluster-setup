@@ -1,10 +1,5 @@
 all:
   hosts:
     server1:
-      ansible_host: example1.com
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    server2:
-      ansible_host: example2.com
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
+       localhost:
+       ansible_connection: local
