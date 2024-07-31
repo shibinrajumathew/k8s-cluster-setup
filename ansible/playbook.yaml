@@ -1,6 +1,6 @@
 ---
 - name: Setup Docker and install Jenkins
-  hosts: servers
+  hosts: all
   become: yes
 
   tasks:
