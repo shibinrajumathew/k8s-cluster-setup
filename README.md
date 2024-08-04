@@ -12,7 +12,7 @@ Template for setuping k8 with docker for frontend and backend. Nginx server used
 - Docker file
 - React js for UI
 - Express Js for Back End
-- webhook build with Jenkins CI/CD build docker inside jenkins
+- webhook build with Jenkins CI/CD
 
 
 ## Installation
