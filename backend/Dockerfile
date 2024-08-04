@@ -15,6 +15,8 @@ COPY . .
 EXPOSE 5000
 
 # Pass environment variable to the container
+
+ARG ACCESSTOKEN
 ENV ACCESSTOKEN=${ACCESSTOKEN}
 
 # Start the app

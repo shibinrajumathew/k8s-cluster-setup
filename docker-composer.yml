@@ -2,17 +2,17 @@ version: '3.8'
 
 services:
   backend:
-    build: ./node-backend
+    build: ./backend
+    args:
+      ACCESSTOKEN: ${ACCESSTOKEN}
     ports:
       - "5000:5000"
-    environment:
-      - ACCESSTOKEN=${ACCESSTOKEN}
     networks:
       - app-network
 
   frontend:
     build:
-      context: ./react-frontend
+      context: ./frontend
       args:
         ACCESSTOKEN: ${ACCESSTOKEN}
     ports:
