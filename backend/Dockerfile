@@ -20,4 +20,4 @@ ARG ACCESSTOKEN
 ENV ACCESSTOKEN=${ACCESSTOKEN}
 
 # Start the app
-CMD ["node", "index.js"]
+CMD ["node", "app.js"]
