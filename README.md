@@ -7,7 +7,9 @@ Template for setuping k8 with docker for frontend and backend. Nginx server used
 
 
 ## Features
-
+- Terraform
+- Ansible
+- Nginx
 - Docker compose yaml
 - Docker file
 - React js for UI
