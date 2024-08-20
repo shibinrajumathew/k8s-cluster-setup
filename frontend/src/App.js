@@ -7,7 +7,7 @@ function App() {
 
   const handleRequest = (endpoint) => {
     const host = process.env.MS_HOST || "http://localhost:8000/";
-    
+    console.log("host name::::", host);
     axios({
       method: endpoint.method,
       url: `${host}api${endpoint.path}`,
