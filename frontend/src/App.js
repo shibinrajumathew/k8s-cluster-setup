@@ -6,9 +6,10 @@ function App() {
   const [response, setResponse] = useState("");
 
   const handleRequest = (endpoint) => {
+    const host = process.env.MS_HOST
     axios({
       method: endpoint.method,
-      url: `http://localhost:8000/api${endpoint.path}`,
+      url: `${host}/api${endpoint.path}`,
       headers: {
         accesstoken: process.env.REACT_APP_ACCESSTOKEN,
       },

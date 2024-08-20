@@ -11,6 +11,9 @@ RUN npm install
 # Bundle app source
 COPY . .
 
+
+ARG MS_HOST
+ENV MS_HOST=$MS_HOST
 # Build the app with environment variable
 ARG ACCESSTOKEN
 ENV REACT_APP_ACCESSTOKEN=$ACCESSTOKEN
