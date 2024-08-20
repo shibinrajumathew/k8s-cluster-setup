@@ -9,7 +9,7 @@ function App() {
     const host = process.env.MS_HOST
     axios({
       method: endpoint.method,
-      url: `${host}/api${endpoint.path}`,
+      url: `${host}api${endpoint.path}`,
       headers: {
         accesstoken: process.env.REACT_APP_ACCESSTOKEN,
       },
