@@ -8,8 +8,8 @@ function App() {
   const handleRequest = (endpoint) => {
     
     console.log("process.env.REACT_APP_ACCESSTOKEN::::", process.env.REACT_APP_ACCESSTOKEN);
-    console.log("process.env.MS_HOST::::", process.env.MS_HOST);
-    const host = process.env.MS_HOST || "http://localhost:8000/";
+    console.log("process.env.MS_HOST::::", process.env.REACT_APP_MS_HOST);
+    const host = process.env.REACT_APP_MS_HOST || "http://localhost:8000/";
     console.log("host name::::", host);
     axios({
       method: endpoint.method,
