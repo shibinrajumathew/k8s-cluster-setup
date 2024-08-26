@@ -1,19 +1,13 @@
 provider "aws" {
-  region = "ap-south-1"
+  profile = "vveeo"
+  region  = "ap-south-1" 
 }
 
-# Define the key pair for SSH access
-resource "aws_key_pair" "k8s_key" {
-  key_name   = "k8s-key"
-  public_key = file("~/.ssh/id_rsa.pub")
-}
-
-# Create a Security Group for Kubernetes Nodes
-resource "aws_security_group" "k8s_sg" {
-  name        = "k8s-sg"
-  description = "Allow traffic for Kubernetes nodes"
-
-  # Allow inbound SSH access
+# Security Group for SSH and HTTP access
+resource "aws_security_group" "k8s_sg_master" {
+  name        = "k8s_security_group_master"
+  description = "Allow SSH only"
+  
   ingress {
     from_port   = 22
     to_port     = 22
@@ -21,15 +15,6 @@ resource "aws_security_group" "k8s_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow all traffic within the security group (e.g., between nodes)
-  ingress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    self        = true
-  }
-
-  # Allow all outbound traffic
   egress {
     from_port   = 0
     to_port     = 0
@@ -38,70 +23,87 @@ resource "aws_security_group" "k8s_sg" {
   }
 
   tags = {
-    Name = "k8s-sg"
+    Name = "k8s-sg-master"
   }
 }
+resource "aws_security_group" "k8s_sg" {
+  name        = "k8s_security_group_workernode"
+  description = "Allow SSH and HTTP"
 
-# Create Elastic IPs for Master Nodes
-resource "aws_eip" "master_nodes" {
-  count = 2
-}
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-# Create Elastic IPs for Worker Nodes
-resource "aws_eip" "worker_nodes" {
-  count = 3
-}
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-# Create 2 master nodes with t3.micro instance type using Ubuntu
-resource "aws_instance" "master_nodes" {
-  count         = 2
-  ami           = "ami-0b898040803850657" # Ubuntu 20.04 LTS AMI ID for Mumbai region
-  instance_type = "t3.micro"
-  key_name      = aws_key_pair.k8s_key.key_name
-  security_groups = [aws_security_group.k8s_sg.name]
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   tags = {
-    Name = "k8s-master-${count.index + 1}"
-  }
-
-  # Adding some block storage (optional)
-  root_block_device {
-    volume_size = 8
-    volume_type = "gp2"
+    Name = "k8s-sg-worker"
   }
 }
 
-# Create 3 worker nodes with t3a.small instance type using Ubuntu
-resource "aws_instance" "worker_nodes" {
-  count         = 3
-  ami           = "ami-0b898040803850657" # Ubuntu 20.04 LTS AMI ID for Mumbai region
-  instance_type = "t3a.small"
-  key_name      = aws_key_pair.k8s_key.key_name
-  security_groups = [aws_security_group.k8s_sg.name]
+# Elastic IP for master node
+resource "aws_eip" "k8s_master_eip" {
+  instance = aws_instance.k8s_master.id
+  domain      = "vpc"
+  tags = {
+    Name = "k8s-master-eip"
+  }
+}
+
+# Elastic IP for worker nodes
+resource "aws_eip" "k8s_worker_eip" {
+  count    = 2
+  instance = aws_instance.k8s_worker[count.index].id
+  domain      = "vpc"
+  tags = {
+    Name = "k8s-worker-eip-${count.index + 1}"
+  }
+}
+
+resource "aws_instance" "k8s_master" {
+  ami                         = "ami-0838bc34dd3bae25e"
+  instance_type               = "t2.medium"
+  key_name                    = "vveeoaws"
+  associate_public_ip_address = true
+  security_groups             = [aws_security_group.k8s_sg_master.name]
+
+  tags = {
+    Name = "k8s-master"
+  }
+}
+
+resource "aws_instance" "k8s_worker" {
+  count                       = 2
+  ami                         = "ami-0838bc34dd3bae25e" 
+  instance_type               = "t2.medium"
+  key_name                    = "vveeoaws"
+  associate_public_ip_address = true
+  security_groups             = [aws_security_group.k8s_sg.name]
 
   tags = {
     Name = "k8s-worker-${count.index + 1}"
   }
-
-  # Adding some block storage (optional)
-  root_block_device {
-    volume_size = 8
-    volume_type = "gp2"
-  }
 }
 
-# Associate Elastic IPs with Master Nodes
-resource "aws_network_interface_attachment" "master_nodes_eip" {
-  count                 = 2
-  instance_id           = aws_instance.master_nodes[count.index].id
-  network_interface_id  = aws_instance.master_nodes[count.index].network_interface_ids[0]
-  allocation_id         = aws_eip.master_nodes[count.index].id
+output "master_ip" {
+  value = aws_eip.k8s_master_eip.public_ip
 }
 
-# Associate Elastic IPs with Worker Nodes
-resource "aws_network_interface_attachment" "worker_nodes_eip" {
-  count                 = 3
-  instance_id           = aws_instance.worker_nodes[count.index].id
-  network_interface_id  = aws_instance.worker_nodes[count.index].network_interface_ids[0]
-  allocation_id         = aws_eip.worker_nodes[count.index].id
+output "worker_ips" {
+  value = aws_eip.k8s_worker_eip[*].public_ip
 }
