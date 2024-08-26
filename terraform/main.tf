@@ -78,7 +78,7 @@ resource "aws_eip" "k8s_worker_eip" {
 resource "aws_instance" "k8s_master" {
   ami                         = "ami-0838bc34dd3bae25e"
   instance_type               = "t2.medium"
-  key_name                    = "vveeoaws"
+  key_name                    = "k8s-cluster-manager"
   associate_public_ip_address = true
   security_groups             = [aws_security_group.k8s_sg_master.name]
 
@@ -91,7 +91,7 @@ resource "aws_instance" "k8s_worker" {
   count                       = 2
   ami                         = "ami-0838bc34dd3bae25e" 
   instance_type               = "t2.medium"
-  key_name                    = "vveeoaws"
+  key_name                    = "k8s-cluster-manager"
   associate_public_ip_address = true
   security_groups             = [aws_security_group.k8s_sg.name]
 
