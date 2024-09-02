@@ -58,13 +58,12 @@
         state: present
 
     - name: Hold Kubernetes packages at current version
-      apt:
+      ansible.builtin.dpkg_selections:
         name: 
           - kubelet
           - kubeadm
           - kubectl
-        state: present
-        lock: yes
+        selection: hold
 
 - hosts: master
   become: yes
