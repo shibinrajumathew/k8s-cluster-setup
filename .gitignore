@@ -1,3 +1,7 @@
 */node_modules/
 */package-lock.json
 frontend/package-lock.json
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/.terraform/*
