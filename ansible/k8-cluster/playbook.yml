@@ -91,6 +91,11 @@
         regexp: 'SystemdCgroup = false'
         line: 'SystemdCgroup = true'
       become: true
+    - name: Restart containerd service
+      ansible.builtin.service:
+        name: containerd
+        state: restarted
+      become: true
 
   handlers:
     - name: Update fstab
