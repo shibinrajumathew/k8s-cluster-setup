@@ -189,6 +189,27 @@ resource "aws_security_group" "k8s_sg" {
   }
 }
 
+# Network Interface for Master Node
+resource "aws_network_interface" "k8s_master_nic" {
+  subnet_id = aws_subnet.k8s_subnet_a.id
+  private_ips = ["10.0.1.1"]
+
+  tags = {
+    Name = "k8s-master-nic"
+  }
+}
+
+# Network Interface for Worker Nodes
+resource "aws_network_interface" "k8s_worker_nic" {
+  count     = 3
+  subnet_id = element([aws_subnet.k8s_subnet_a.id, aws_subnet.k8s_subnet_b.id, aws_subnet.k8s_subnet_c.id], count.index)
+  private_ips = ["10.0.${count.index + 1}.100"]
+
+  tags = {
+    Name = "k8s-worker-nic-${count.index + 1}"
+  }
+}
+
 # Elastic IP for master node
 resource "aws_eip" "k8s_master_eip" {
   instance = aws_instance.k8s_master.id
@@ -233,6 +254,15 @@ resource "aws_instance" "k8s_worker" {
   tags = {
     Name = "k8s-worker-${count.index + 1}"
   }
+}
+
+# Print IPs
+output "master_private_ip" {
+  value = aws_instance.k8s_master.private_ip
+}
+
+output "worker_private_ips" {
+  value = aws_instance.k8s_worker[*].private_ip
 }
 
 output "master_ip" {

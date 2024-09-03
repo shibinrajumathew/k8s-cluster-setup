@@ -142,3 +142,18 @@
   tasks:
     - name: Run join command on worker nodes
       shell: "{{ lookup('file', './join_command.txt') }}"
+
+- hosts: master
+  become: yes
+  tasks:
+    - name: Label control-plane node
+      command: kubectl label nodes ip-10-0-1-1 role=control-plane --overwrite
+
+    - name: Label worker node 1
+      command: kubectl label nodes ip-10-0-1-100 role=worker_1 --overwrite
+
+    - name: Label worker node 2
+      command: kubectl label nodes ip-10-0-2-100 role=worker_2 --overwrite
+
+    - name: Label worker node 3
+      command: kubectl label nodes ip-10-0-3-100 role=worker_3 --overwrite
