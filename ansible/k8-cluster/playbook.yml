@@ -79,23 +79,19 @@
         - kubelet
         - kubeadm
         - kubectl
-    - name: Backup existing containerd config.toml
-      copy:
-        src: /etc/containerd/config.toml
-        dest: /etc/containerd/config.toml.bak
-        backup: yes
-      when: containerd_default_config.changed or (stat_result.stat.exists)
 
-    - name: Update containerd config.toml to use systemd cgroup driver with runc
-      blockinfile:
+    - name: Generate containerd default configuration
+      ansible.builtin.shell: |
+        containerd config default > /etc/containerd/config.toml
+      become: true
+
+    - name: Update SystemdCgroup to true in containerd config
+      ansible.builtin.lineinfile:
         path: /etc/containerd/config.toml
-        block: |
-          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-              SystemdCgroup = true
-        insertafter: '[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]'
-        create: yes
-        
+        regexp: 'SystemdCgroup = false'
+        line: 'SystemdCgroup = true'
+      become: true
+
   handlers:
     - name: Update fstab
       command: systemctl daemon-reload
