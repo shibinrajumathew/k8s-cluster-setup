@@ -98,8 +98,8 @@ resource "aws_security_group" "k8s_sg_master" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    from_port   = 643
-    to_port     = 643
+    from_port   = 6443
+    to_port     = 6443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

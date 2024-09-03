@@ -122,8 +122,10 @@
         dest: $HOME/.kube/config
         remote_src: yes
 
-    - name: Change ownership of kube config
-      command: chown $(id -u):$(id -g) $HOME/.kube/config
+    - name: Set ownership of the Kubernetes config file
+      shell: |
+        chown $(id -u):$(id -g) $HOME/.kube/config
+      become: true
 
     - name: Install Calico network plugin
       shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
