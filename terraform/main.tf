@@ -191,75 +191,79 @@ resource "aws_security_group" "k8s_sg" {
 
 # Network Interface for Master Node
 resource "aws_network_interface" "k8s_master_nic" {
-  subnet_id   = aws_subnet.k8s_subnet_a.id
-  private_ips = ["10.0.1.100"]
-  attachment {
-    instance     = aws_instance.k8s_master.id
-    device_index = 1
-  }
+  subnet_id       = aws_subnet.k8s_subnet_a.id
+  private_ips     = ["10.0.1.100"]
+  security_groups = [aws_security_group.k8s_sg_master.id]
+
   tags = {
     Name = "k8s-master-nic"
   }
 }
 
-
-# Network Interface for Worker Nodes
+# Network Interfaces for Worker Nodes
 resource "aws_network_interface" "k8s_worker_nic" {
-  count     = 3
-  subnet_id = element([aws_subnet.k8s_subnet_a.id, aws_subnet.k8s_subnet_b.id, aws_subnet.k8s_subnet_c.id], count.index)
-  private_ips = [cidrhost(element([aws_subnet.k8s_subnet_a.cidr_block, aws_subnet.k8s_subnet_b.cidr_block, aws_subnet.k8s_subnet_c.cidr_block], count.index), 200)]
-  attachment {
-    instance     = aws_instance.k8s_worker[count.index].id
-    device_index = 1
-  }
+  count          = 3
+  subnet_id      = element([aws_subnet.k8s_subnet_a.id, aws_subnet.k8s_subnet_b.id, aws_subnet.k8s_subnet_c.id], count.index)
+  private_ips    = [cidrhost(element([aws_subnet.k8s_subnet_a.cidr_block, aws_subnet.k8s_subnet_b.cidr_block, aws_subnet.k8s_subnet_c.cidr_block], count.index), 200)]
+  security_groups = [aws_security_group.k8s_sg.id]
+
   tags = {
     Name = "k8s-worker-nic-${count.index + 1}"
   }
 }
 
-# Elastic IP for master node
+# Master Node Instance
+resource "aws_instance" "k8s_master" {
+  ami                         = "ami-0838bc34dd3bae25e"
+  instance_type               = "t3.small"
+  key_name                    = "k8s-cluster-manager"
+  network_interface {
+    network_interface_id = aws_network_interface.k8s_master_nic.id
+    device_index         = 0
+  }
+  
+  tags = {
+    Name = "k8s-master"
+  }
+}
+
+# Worker Node Instances
+resource "aws_instance" "k8s_worker" {
+  count                       = 3
+  ami                         = "ami-0838bc34dd3bae25e"
+  instance_type               = "t3.small"
+  key_name                    = "k8s-cluster-manager"
+  network_interface {
+    network_interface_id = aws_network_interface.k8s_worker_nic[count.index].id
+    device_index         = 0
+  }
+  
+  tags = {
+    Name = "k8s-worker-${count.index + 1}"
+  }
+}
+
+# Elastic IP for Master Node
 resource "aws_eip" "k8s_master_eip" {
   instance = aws_instance.k8s_master.id
+  associate_with_private_ip = "10.0.1.100"
   domain      = "vpc"
   tags = {
     Name = "k8s-master-eip"
   }
 }
 
-# Elastic IP for worker nodes
+# Elastic IPs for Worker Nodes
 resource "aws_eip" "k8s_worker_eip" {
   count    = 3
   instance = aws_instance.k8s_worker[count.index].id
+  associate_with_private_ip = cidrhost(
+    element([aws_subnet.k8s_subnet_a.cidr_block, aws_subnet.k8s_subnet_b.cidr_block, aws_subnet.k8s_subnet_c.cidr_block], count.index), 
+    200
+  )
   domain      = "vpc"
   tags = {
     Name = "k8s-worker-eip-${count.index + 1}"
-  }
-}
-
-resource "aws_instance" "k8s_master" {
-  ami                         = "ami-0838bc34dd3bae25e"
-  instance_type               = "t3.small"
-  key_name                    = "k8s-cluster-manager"
-  associate_public_ip_address = true
-  security_groups             = [aws_security_group.k8s_sg_master.id]
-  subnet_id                   = aws_subnet.k8s_subnet_a.id # Assuming master in subnet_a
-
-  tags = {
-    Name = "k8s-master"
-  }
-}
-
-resource "aws_instance" "k8s_worker" {
-  count                       = 3
-  ami                         = "ami-0838bc34dd3bae25e"
-  instance_type               = "t3.small"
-  key_name                    = "k8s-cluster-manager"
-  associate_public_ip_address = true
-  security_groups             = [aws_security_group.k8s_sg.id]
-  subnet_id                   = element([aws_subnet.k8s_subnet_a.id,aws_subnet.k8s_subnet_b.id, aws_subnet.k8s_subnet_c.id], count.index)
-
-  tags = {
-    Name = "k8s-worker-${count.index + 1}"
   }
 }
 
