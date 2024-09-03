@@ -2,6 +2,20 @@
 - hosts: all
   become: yes
   tasks:
+    - name: Remove swap entries from /etc/fstab
+      replace:
+        path: /etc/fstab
+        regexp: '^\s*([^#]\S*\s+\S+\s+swap\s+\S+.*)$'
+        replace: '# \1'
+      notify: Update fstab
+
+    - name: Ensure swap is disabled in sysctl
+      sysctl:
+        name: vm.swappiness
+        value: '0'
+        state: present
+        sysctl_set: yes
+
     - name: Update and install dependencies
       apt:
         update_cache: yes
@@ -65,12 +79,33 @@
         - kubelet
         - kubeadm
         - kubectl
+    - name: Backup existing containerd config.toml
+      copy:
+        src: /etc/containerd/config.toml
+        dest: /etc/containerd/config.toml.bak
+        backup: yes
+      when: containerd_default_config.changed or (stat_result.stat.exists)
+
+    - name: Update containerd config.toml to use systemd cgroup driver with runc
+      blockinfile:
+        path: /etc/containerd/config.toml
+        block: |
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+              SystemdCgroup = true
+        insertafter: '[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]'
+        create: yes
+        
+  handlers:
+    - name: Update fstab
+      command: systemctl daemon-reload
+      become: yes
 
 - hosts: master
   become: yes
   tasks:
     - name: Initialize Kubernetes cluster
-      shell: kubeadm init --pod-network-cidr=192.168.0.0/16
+      shell: kubeadm init --pod-network-cidr=10.244.0.0/16
       register: init_output
       ignore_errors: yes
 
