@@ -1,7 +1,6 @@
 ---
 - hosts: all
   become: yes
-  become_user: "ubuntu"
   tasks:
     - name: Remove swap entries from /etc/fstab
       replace:
@@ -112,7 +111,7 @@
       ignore_errors: yes
     - name: Create .kube directory in the user's home
       file:
-        path: "{{ ansible_env.HOME }}/.kube"
+        path: "/home/ubuntu/.kube"
         state: directory
         mode: '0755'
         owner: "ubuntu"
@@ -121,7 +120,7 @@
     - name: Copy /etc/kubernetes/admin.conf to user's .kube directory
       copy:
         src: /etc/kubernetes/admin.conf
-        dest: "{{ ansible_env.HOME }}/.kube/config"
+        dest: "/home/ubuntu/.kube/config"
         remote_src: yes
         owner: "ubuntu"
         group: "ubuntu"
@@ -129,7 +128,7 @@
 
     - name: Ensure correct ownership of .kube/config
       file:
-        path: "{{ ansible_env.HOME }}/.kube/config"
+        path: "/home/ubuntu/.kube/config"
         owner: "ubuntu"
         group: "ubuntu"
         mode: '0644'
