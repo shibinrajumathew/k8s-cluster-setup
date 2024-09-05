@@ -111,11 +111,9 @@
       ignore_errors: yes
 
     - name: Install Calico network plugin
-      become: yes
       shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 
     - name: Extract join command
-      become: yes
       shell: kubeadm token create --print-join-command
       register: join_command
 
