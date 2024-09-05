@@ -1,7 +1,7 @@
 ---
 - hosts: all
   become: yes
-  become_user: "{{ ansible_user_id }}"
+  become_user: "ubuntu"
   tasks:
     - name: Remove swap entries from /etc/fstab
       replace:
@@ -115,23 +115,23 @@
         path: "{{ ansible_env.HOME }}/.kube"
         state: directory
         mode: '0755'
-        owner: "{{ ansible_user_id }}"
-        group: "{{ ansible_user_gid }}"
+        owner: "ubuntu"
+        group: "ubuntu"
 
     - name: Copy /etc/kubernetes/admin.conf to user's .kube directory
       copy:
         src: /etc/kubernetes/admin.conf
         dest: "{{ ansible_env.HOME }}/.kube/config"
         remote_src: yes
-        owner: "{{ ansible_user_id }}"
-        group: "{{ ansible_user_gid }}"
+        owner: "ubuntu"
+        group: "ubuntu"
         mode: '0644'
 
     - name: Ensure correct ownership of .kube/config
       file:
         path: "{{ ansible_env.HOME }}/.kube/config"
-        owner: "{{ ansible_user_id }}"
-        group: "{{ ansible_user_gid }}"
+        owner: "ubuntu"
+        group: "ubuntu"
         mode: '0644'
 
     - name: Install Calico network plugin
