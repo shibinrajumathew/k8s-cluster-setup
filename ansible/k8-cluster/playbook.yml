@@ -103,30 +103,13 @@
       become: yes
 
 - hosts: master
-  become: yes
   tasks:
     - name: Initialize Kubernetes cluster
+      become: yes
       shell: kubeadm init --pod-network-cidr=10.244.0.0/16
       register: init_output
-
-    - name: Install Calico network plugin
-      shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
-
-    - name: Extract join command
-      shell: kubeadm token create --print-join-command
-      register: join_command
-
-    - name: Save join command for later use
-      local_action: copy content="{{ join_command.stdout }}" dest=./join_command.txt
-
-- hosts: workers
-  become: yes
-  tasks:
-    - name: Run join command on worker nodes
-      shell: "{{ lookup('file', './join_command.txt') }}"
-
-- hosts: master
-  tasks:
+      ignore_errors: yes
+      
     - name: Create .kube directory in the user's home
       become: yes
       file:
@@ -153,6 +136,26 @@
         owner: "ubuntu"
         group: "ubuntu"
         mode: '0644'
+
+    - name: Install Calico network plugin
+      shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+    - name: Extract join command
+      shell: kubeadm token create --print-join-command
+      register: join_command
+
+    - name: Save join command for later use
+      local_action: copy content="{{ join_command.stdout }}" dest=./join_command.txt
+
+- hosts: workers
+  become: yes
+  tasks:
+    - name: Run join command on worker nodes
+      shell: "{{ lookup('file', './join_command.txt') }}"
+
+- hosts: master
+  become: yes
+  tasks:
     - name: Label control-plane node
       command: kubectl label nodes ip-10-0-1-100 kubernetes.io/role=control-plane --overwrite
 
