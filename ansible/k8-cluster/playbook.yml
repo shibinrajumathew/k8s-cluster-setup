@@ -154,7 +154,6 @@
       shell: "{{ lookup('file', './join_command.txt') }}"
 
 - hosts: master
-  become: yes
   tasks:
     - name: Label control-plane node
       command: kubectl label nodes ip-10-0-1-100 kubernetes.io/role=control-plane --overwrite
