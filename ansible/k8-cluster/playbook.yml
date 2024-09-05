@@ -108,7 +108,6 @@
     - name: Initialize Kubernetes cluster
       shell: kubeadm init --pod-network-cidr=10.244.0.0/16
       register: init_output
-      ignore_errors: yes
 
     - name: Install Calico network plugin
       shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
