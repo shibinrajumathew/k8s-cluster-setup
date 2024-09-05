@@ -1,6 +1,7 @@
 ---
 - hosts: all
   become: yes
+  become_user: "{{ ansible_user_id }}"
   tasks:
     - name: Remove swap entries from /etc/fstab
       replace:
@@ -109,23 +110,29 @@
       shell: kubeadm init --pod-network-cidr=10.244.0.0/16
       register: init_output
       ignore_errors: yes
-
-    - name: Create .kube directory for kubectl configuration
+    - name: Create .kube directory in the user's home
       file:
-        path: $HOME/.kube
+        path: "{{ ansible_env.HOME }}/.kube"
         state: directory
         mode: '0755'
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_gid }}"
 
-    - name: Copy kube config to user's home directory
+    - name: Copy /etc/kubernetes/admin.conf to user's .kube directory
       copy:
         src: /etc/kubernetes/admin.conf
-        dest: $HOME/.kube/config
+        dest: "{{ ansible_env.HOME }}/.kube/config"
         remote_src: yes
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_gid }}"
+        mode: '0644'
 
-    - name: Set ownership of the Kubernetes config file
-      shell: |
-        chown $(id -u):$(id -g) $HOME/.kube/config
-      become: true
+    - name: Ensure correct ownership of .kube/config
+      file:
+        path: "{{ ansible_env.HOME }}/.kube/config"
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_gid }}"
+        mode: '0644'
 
     - name: Install Calico network plugin
       shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
