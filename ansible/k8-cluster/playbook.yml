@@ -109,34 +109,13 @@
       shell: kubeadm init --pod-network-cidr=10.244.0.0/16
       register: init_output
       ignore_errors: yes
-    - name: Create .kube directory in the user's home
-      file:
-        path: "/home/ubuntu/.kube"
-        state: directory
-        mode: '0755'
-        owner: "ubuntu"
-        group: "ubuntu"
-
-    - name: Copy /etc/kubernetes/admin.conf to user's .kube directory
-      copy:
-        src: /etc/kubernetes/admin.conf
-        dest: "/home/ubuntu/.kube/config"
-        remote_src: yes
-        owner: "ubuntu"
-        group: "ubuntu"
-        mode: '0644'
-
-    - name: Ensure correct ownership of .kube/config
-      file:
-        path: "/home/ubuntu/.kube/config"
-        owner: "ubuntu"
-        group: "ubuntu"
-        mode: '0644'
 
     - name: Install Calico network plugin
+      become: yes
       shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 
     - name: Extract join command
+      become: yes
       shell: kubeadm token create --print-join-command
       register: join_command
 
@@ -150,8 +129,33 @@
       shell: "{{ lookup('file', './join_command.txt') }}"
 
 - hosts: master
-  become: yes
   tasks:
+    - name: Create .kube directory in the user's home
+      become: yes
+      file:
+        path: "/home/ubuntu/.kube"
+        state: directory
+        mode: '0755'
+        owner: "ubuntu"
+        group: "ubuntu"
+
+    - name: Copy /etc/kubernetes/admin.conf to user's .kube directory
+      become: yes
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: "/home/ubuntu/.kube/config"
+        remote_src: yes
+        owner: "ubuntu"
+        group: "ubuntu"
+        mode: '0644'
+
+    - name: Ensure correct ownership of .kube/config
+      become: yes
+      file:
+        path: "/home/ubuntu/.kube/config"
+        owner: "ubuntu"
+        group: "ubuntu"
+        mode: '0644'
     - name: Label control-plane node
       command: kubectl label nodes ip-10-0-1-100 kubernetes.io/role=control-plane --overwrite
 
