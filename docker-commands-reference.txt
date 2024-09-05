@@ -1,0 +1,15 @@
+docker stop frontend backend-container
+
+docker container prune -a -f
+
+docker image prune -a -f
+
+docker network prune -a -f
+
+docker network create k8-docker-network
+
+docker pull ddrench/k8:backend_v2 && docker pull ddrench/k8:frontend_v2
+
+docker run -d -p 80:3000 --name frontend --network k8-docker-network ddrench/k8:frontend_v2
+
+docker run -d -p 8000:8000 --network k8-docker-network --name backend ddrench/k8:backend_v2
