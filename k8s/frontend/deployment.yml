@@ -5,7 +5,7 @@ metadata:
   labels:
     app: frontend
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: frontend
@@ -15,7 +15,7 @@ spec:
         app: frontend
     spec:
       containers:
-      - name: frontend
+      - name: frontend-react
         image: ddrench/k8:frontend_v2
         ports:
         - containerPort: 3000

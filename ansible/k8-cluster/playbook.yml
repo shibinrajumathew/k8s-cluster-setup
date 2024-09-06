@@ -166,3 +166,34 @@
 
     - name: Label worker node 3
       command: kubectl label nodes ip-10-0-3-200 kubernetes.io/role=worker_3 --overwrite
+
+    - name: Download the Helm installation script
+      become: yes
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        dest: /tmp/get_helm.sh
+        mode: '0700'
+
+    - name: Run the Helm installation script
+      become: yes
+      ansible.builtin.command: /tmp/get_helm.sh
+      args:
+        chdir: /tmp
+    - name: Add the NGINX stable Helm repository
+      become: yes
+      ansible.builtin.command: helm repo add nginx-stable https://helm.nginx.com/stable
+      args:
+        chdir: /usr/local/bin
+
+    - name: Update Helm repositories
+      become: yes
+      ansible.builtin.command: helm repo update
+      args:
+        chdir: /usr/local/bin
+
+    - name: Install NGINX ingress using Helm
+      become: yes
+      ansible.builtin.command: >
+        helm install nginx-ingress nginx-stable/nginx-ingress --set rbac.create=true
+      args:
+        chdir: /usr/local/bin

@@ -98,6 +98,36 @@ resource "aws_security_group" "k8s_sg_master" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 8443
+    to_port     = 8443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 10254
+    to_port     = 10254
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
     from_port   = 6443
     to_port     = 6443
     protocol    = "tcp"
@@ -282,10 +312,10 @@ output "worker_private_ips" {
   value = aws_instance.k8s_worker[*].private_ip
 }
 
-output "master_ip" {
+output "master_public_ip" {
   value = aws_eip.k8s_master_eip.public_ip
 }
 
-output "worker_ips" {
+output "worker_public_ips" {
   value = aws_eip.k8s_worker_eip[*].public_ip
 }
