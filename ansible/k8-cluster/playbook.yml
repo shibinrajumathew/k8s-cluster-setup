@@ -127,7 +127,7 @@
         remote_src: yes
         owner: "ubuntu"
         group: "ubuntu"
-        mode: '0644'
+        mode: '0600'
 
     - name: Ensure correct ownership of .kube/config
       become: yes
@@ -135,7 +135,7 @@
         path: "/home/ubuntu/.kube/config"
         owner: "ubuntu"
         group: "ubuntu"
-        mode: '0644'
+        mode: '0600'
 
     - name: Install Calico network plugin
       shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
@@ -181,7 +181,7 @@
         chdir: /tmp
     - name: Add the NGINX stable Helm repository
       become: yes
-      ansible.builtin.command: helm repo add nginx-stable https://helm.nginx.com/stable
+      ansible.builtin.command: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
       args:
         chdir: /usr/local/bin
 
@@ -194,6 +194,6 @@
     - name: Install NGINX ingress using Helm
       become: yes
       ansible.builtin.command: >
-        helm install nginx-ingress nginx-stable/nginx-ingress --set rbac.create=true
+        helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace --set controller.admissionWebhooks.enabled=false
       args:
         chdir: /usr/local/bin
